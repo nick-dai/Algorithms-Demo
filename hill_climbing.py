@@ -1,11 +1,12 @@
 import random
 import math
+import matplotlib.pyplot as plt
 
 # The gap used when searching improvements
 search_gap = 0.00001
 
 # Search the values around the current value
-def searchImprovements(x1, x2, prev):
+def searchImprovement(x1, x2, prev):
 	# Four possible improvements: increment/decrement in x1, increment/decrement in x2
 	# Every calculated result only changes in one direction
 	pairs = [[(x1 + search_gap), x2], [x1, (x2 + search_gap)], [(x1 - search_gap), x2], [x1, (x2 - search_gap)]]
@@ -20,7 +21,7 @@ def searchImprovements(x1, x2, prev):
 	max_index = results.index(max_value)
 	# Return the maximum value, new x1 and new x2 when the current maximum is greater than the last one
 	if max_value > prev:
-		return [pairs[max_index][0], pairs[max_index][1], max_value]
+		return { 'x1': pairs[max_index][0], 'x2': pairs[max_index][1], 'y': max_value }
 	else:
 		return False
 
@@ -41,19 +42,23 @@ def search():
 	x1 = random.uniform(x1_lower_bond, x1_upper_bound)
 	x2 = random.uniform(x2_lower_bond, x2_upper_bound)
 	# Preserve the initial values for x1 and x2
-	x1_start = x1
-	x2_start = x2
+	x1_history = [x1]
+	x2_history = [x2]
 	# The maximum got from the last search
-	prev = None
+	prev = func(x1, x2)
+	y_history = [prev]
 	while 1:
 		loop_count += 1
-		can_continue = searchImprovements(x1, x2, prev)
-		if can_continue:
+		improvement = searchImprovement(x1, x2, prev)
+		if improvement:
 			# New x1 and new x2 should be in the range limited by the question
-			if can_continue[0] < x1_upper_bound and can_continue[0] > x1_lower_bond and can_continue[1] > x2_lower_bond and can_continue[1] < x2_upper_bound:
-				x1 = can_continue[0]
-				x2 = can_continue[1]
-				prev = can_continue[2]
+			if improvement['x1'] < x1_upper_bound and improvement['x1'] > x1_lower_bond and improvement['x2'] > x2_lower_bond and improvement['x2'] < x2_upper_bound:
+				x1 = improvement['x1']
+				x2 = improvement['x2']
+				prev = improvement['y']
+				x1_history.append(x1)
+				x2_history.append(x2)
+				y_history.append(prev)
 			else:
 				break
 		else:
@@ -61,16 +66,19 @@ def search():
 		if loop_count > max_loop:
 			return False
 			break
-	return [prev, x1_start, x2_start, loop_count, x1, x2]
+	return { 'y': y_history, 'count': loop_count, 'x1': x1_history, 'x2': x2_history }
 
 # Entry point
 if __name__ == '__main__':
 	# Try the search n times
-	tries = 10
+	tries = 5
 	for i in range(tries):
 		result = search()
 		if result:
 			print "- Result %d:" % (i+1)
-			print "  Y = %.6f\n  X1 = %.6f, X2 = %.6f, Loop = %d\n  Max_X1 = %.6f, Max_X2 = %.6f" % (result[0], result[1], result[2], result[3], result[4], result[5])
+			print "  Y = %.6f\n  First_X1 = %.6f, First_X2 = %.6f, Loop = %d\n  Last_X1 = %.6f, Last_X2 = %.6f" % (result['y'][len(result['y'])-1], result['x1'][0], result['x2'][0], result['count'], result['x1'][len(result['x1'])-1], result['x2'][len(result['x2'])-1])
+			# plt.plot(result['y'])
+			# plt.ylabel('Hill Climbing')
+			# plt.show()
 		else:
 			print "- Result %d: exceeds maximum loop limit." % i

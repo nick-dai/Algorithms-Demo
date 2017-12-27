@@ -1,9 +1,10 @@
 import random
 import math
+import matplotlib.pyplot as plt
 LIMIT = 100000
 
 def updateT(T):
-    return T - 0.001
+    return T - 0.0001
 
 def move(index, results, T):
     new_index = random.randint(0, len(results))
@@ -21,15 +22,16 @@ def simulatedAnnealing(results):
     curr_index = start_index
     best_index = start_index
     T = 1.
-
+    y_history = []
     while T > 1e-3:
         curr_index = move(curr_index, results, T)
+        y_history.append(results[curr_index][2])
         if results[curr_index][2] > results[best_index][2]:
             best_index = curr_index
         T = updateT(T)
         loop_count += 1
 
-    return curr_index, best_index, start_index
+    return curr_index, best_index, start_index, y_history
 
 # Function given in the question
 def func(x1, x2):
@@ -56,8 +58,11 @@ if __name__ == '__main__':
     tries = 5
     for i in range(tries):
         random_results = getRandomResults()
-        last, best, first = simulatedAnnealing(random_results)
+        last, best, first, y_history = simulatedAnnealing(random_results)
         print "- Result %d:" % (i)
         print "  Last solution (%d): X1=%.6f, X2=%.6f, Y=%.6f" % (last, random_results[last][0], random_results[last][1], random_results[last][2])
         print "  Best solution (%d): X1=%.6f, X2=%.6f, Y=%.6f" % (best, random_results[best][0], random_results[best][1], random_results[best][2])
         print "  First solution (%d): X1=%.6f, X2=%.6f, Y=%.6f" % (first, random_results[first][0], random_results[first][1], random_results[first][2])
+        # plt.plot(y_history)
+        # plt.ylabel('Simulated Annealing')
+        # plt.show()
